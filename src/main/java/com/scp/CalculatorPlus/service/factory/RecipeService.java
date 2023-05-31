@@ -86,26 +86,89 @@ public class RecipeService {
         return bestRecipe;
     }
 
+    /**
+     * Given the parameters, determines the normalized sink value of a recipe.<br>
+     * This can be described as the factor by which the base resources sink values are being multiplied
+     * by to reach the output items sink value. The higher, the better. <br>
+     * <u>Formula</u>: <i>output_item_sink_value</i> / <i>total_base_resource_sink_value</i>
+     *
+     * @param recipe
+     * @return
+     */
     public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe) {
         return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), BigFraction.ONE);
     }
 
+    /**
+     * Given the parameters, determines the normalized sink value of a recipe.<br>
+     * This can be described as the factor by which the base resources sink values are being multiplied
+     * by to reach the output items sink value. The higher, the better. <br>
+     * <u>Formula</u>: <i>output_item_sink_value</i> / <i>total_base_resource_sink_value</i>
+     *
+     * @param isPrimaryRecipe
+     * @param recipe
+     * @param quantity
+     * @return
+     */
     public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, BigFraction quantity) {
         return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItemService.getRecipeItems(recipe), quantity);
     }
 
+    /**
+     * Given the parameters, determines the normalized sink value of a recipe.<br>
+     * This can be described as the factor by which the base resources sink values are being multiplied
+     * by to reach the output items sink value. The higher, the better. <br>
+     * <u>Formula</u>: <i>output_item_sink_value</i> / <i>total_base_resource_sink_value</i>
+     *
+     * @param recipe
+     * @param quantity
+     * @return
+     */
     public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, BigFraction quantity) {
         return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), quantity);
     }
 
+    /**
+     * Given the parameters, determines the normalized sink value of a recipe.<br>
+     * This can be described as the factor by which the base resources sink values are being multiplied
+     * by to reach the output items sink value. The higher, the better. <br>
+     * <u>Formula</u>: <i>output_item_sink_value</i> / <i>total_base_resource_sink_value</i>
+     *
+     * @param recipe
+     * @param recipeItems
+     * @return
+     */
     public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, List<RecipeItem> recipeItems) {
         return getNormalizedSinkValueOfRecipe(true, recipe, recipeItems, BigFraction.ONE);
     }
 
+    /**
+     * Given the parameters, determines the normalized sink value of a recipe.<br>
+     * This can be described as the factor by which the base resources sink values are being multiplied
+     * by to reach the output items sink value. The higher, the better. <br>
+     * <u>Formula</u>: <i>output_item_sink_value</i> / <i>total_base_resource_sink_value</i>
+     *
+     * @param isPrimaryRecipe
+     * @param recipe
+     * @param recipeItems
+     * @return
+     */
     public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, List<RecipeItem> recipeItems) {
         return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItems, BigFraction.ONE);
     }
 
+    /**
+     * Given the parameters, determines the normalized sink value of a recipe.<br>
+     * This can be described as the factor by which the base resources sink values are being multiplied
+     * by to reach the output items sink value. The higher, the better. <br>
+     * <u>Formula</u>: <i>output_item_sink_value</i> / <i>total_base_resource_sink_value</i>
+     *
+     * @param isPrimaryRecipe
+     * @param recipe
+     * @param recipeItems
+     * @param quantity
+     * @return
+     */
     public BigFraction getNormalizedSinkValueOfRecipe(
             boolean isPrimaryRecipe,
             Recipe recipe,
@@ -147,6 +210,15 @@ public class RecipeService {
         return totalOutputSinkValue;
     }
 
+    /**
+     * Builds a list of steps to display to the user, guiding them toward their desired product <br>
+     * TODO: Maybe consider adapting the list into a tree that reflects the complexity of the item
+     * where base resources are leaf nodes and outputs are parents of their inputs
+     *
+     * @param recipe
+     * @param quantity
+     * @return
+     */
     public List<BuildStep> calculateBuildStepsForEntireRecipe(Recipe recipe, BigFraction quantity) {
         List<BuildStep> buildSteps = new ArrayList<>();
         List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
