@@ -3,6 +3,7 @@ package com.scp.CalculatorPlus.model;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 @Entity
 @Table(name = "item", schema = "dbo")
@@ -19,12 +20,20 @@ public class Item implements Serializable {
     private boolean hasRecipe;
 
     @Column(name = "sink_value")
-    private  int sinkValue;
+    private Integer sinkValue;
 
     @Column(name = "date_created")
     private java.sql.Timestamp dateCreated;
 
     public Item() {
+    }
+
+    public Item(long id, String itemName, boolean hasRecipe, int sinkValue) {
+        this.id = id;
+        this.itemName = itemName;
+        this.hasRecipe = hasRecipe;
+        this.sinkValue = sinkValue;
+        this.dateCreated = Timestamp.from(Instant.now());
     }
 
     public Item(long id, String itemName, boolean hasRecipe, int sinkValue, Timestamp dateCreated) {
@@ -69,10 +78,6 @@ public class Item implements Serializable {
 
     public Timestamp getDateCreated() {
         return dateCreated;
-    }
-
-    public void setDateCreated(Timestamp dateCreated) {
-        this.dateCreated = dateCreated;
     }
 
     @Override

@@ -4,6 +4,7 @@ import javax.persistence.*;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 @Entity
 @Table(name = "recipe_items", schema = "dbo")
@@ -25,12 +26,21 @@ public class RecipeItem implements Serializable {
     private String direction;
 
     @Column(name = "quantity")
-    private int quantity;
+    private Integer quantity;
 
     @Column(name = "date_created")
     private java.sql.Timestamp dateCreated;
 
     public RecipeItem() {
+    }
+
+    public RecipeItem(long id, Recipe recipe, Item item, String direction, int quantity) {
+        this.id = id;
+        this.recipe = recipe;
+        this.item = item;
+        this.direction = direction;
+        this.quantity = quantity;
+        this.dateCreated = Timestamp.from(Instant.now());
     }
 
     public RecipeItem(long id, Recipe recipe, Item item, String direction, int quantity, Timestamp dateCreated) {
@@ -84,10 +94,6 @@ public class RecipeItem implements Serializable {
 
     public Timestamp getDateCreated() {
         return dateCreated;
-    }
-
-    public void setDateCreated(Timestamp dateCreated) {
-        this.dateCreated = dateCreated;
     }
 
     @Override

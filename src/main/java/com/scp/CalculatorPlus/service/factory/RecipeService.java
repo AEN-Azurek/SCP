@@ -52,9 +52,10 @@ public class RecipeService {
     }
 
     /**
-     * WIP function as application is developed and more inputs/outputs are considered
+     * WIP function as application is developed and more inputs/outputs are considered <br>
+     * Determines the best recipe for an item based on the
      *
-     * @param itemName - String of item name
+     * @param itemName - String of desired output item
      * @return Optimal recipe given inputs
      */
     public Recipe findBestRecipeForItemByNormalizedSinkPoints(String itemName) {
@@ -64,7 +65,7 @@ public class RecipeService {
     /**
      * WIP function as application is developed and more inputs/outputs are considered
      *
-     * @param item - Desired output object
+     * @param item - Desired output item
      * @return Optimal recipe given inputs
      */
     public Recipe findBestRecipeForItemByNormalizedSinkPoints(Item item) {
@@ -84,6 +85,15 @@ public class RecipeService {
         }
 
         return bestRecipe;
+    }
+
+    public void findBestRecipeForItemByPowerConsumption() {
+        // TODO: Best recipe by power consumption -> will need building power consumption
+        // TODO: Determine how to code for varying power (ex. Particle Accelerator)
+    }
+
+    public void findBestRecipeForItemByBuildingFootprint() {
+        // TODO: Best recipe by building footprint -> Will need building width and length
     }
 
     /**
@@ -182,8 +192,6 @@ public class RecipeService {
         for (RecipeItem recipeItem : recipeItems) {
             if (!recipeItemService.isRecipeItemInput(recipeItem)) continue;
 
-            BigFraction recipeItemQuantity = BigFraction.ZERO.add(recipeItem.getQuantity());
-
             BigFraction itemQuantity = BigFraction.ZERO;
             itemQuantity = itemQuantity.add(recipeItem.getQuantity());
             itemQuantity = itemQuantity.divide(primaryRecipeItem.getQuantity());
@@ -223,9 +231,9 @@ public class RecipeService {
         List<BuildStep> buildSteps = new ArrayList<>();
         List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
 
-        Collections.sort(recipeItems, (a, b) -> a.getItem().getSinkValue() - b.getItem().getSinkValue());
+        RecipeItem primaryRecipeItem = recipeItemService.findPrimaryItem(recipe, recipeItems);
 
-        BigFraction itemsPerMinute = recipe.getItemsPerMinute(recipeItems.get(0).getQuantity());
+        BigFraction itemsPerMinute = recipe.getItemsPerMinute(primaryRecipeItem.getQuantity());
         BigFraction buildingQuantity = quantity.divide(itemsPerMinute);
 
         buildSteps.add(
@@ -239,7 +247,7 @@ public class RecipeService {
             if (!recipeItemService.isRecipeItemInput(recipeItem)
                 || !recipeItem.getItem().hasRecipe()) continue;
             BigFraction recipeItemsQuantity = new BigFraction(recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity());
-            BigFraction totalRecipeItemsQuantity = itemsPerMinute.divide(recipeItemsQuantity);
+            BigFraction totalRecipeItemsQuantity = quantity.divide(recipeItemsQuantity);
             buildSteps.addAll(
                 calculateBuildStepsForEntireRecipe(
                     findBestRecipeForItemByNormalizedSinkPoints(
@@ -251,4 +259,5 @@ public class RecipeService {
 
         return buildSteps;
     }
+
 }

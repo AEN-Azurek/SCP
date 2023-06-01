@@ -1,6 +1,9 @@
 package com.scp.CalculatorPlus.model;
 
+import com.scp.CalculatorPlus.model.buildings.Building;
 import org.apache.commons.math3.fraction.BigFraction;
+
+import static com.scp.CalculatorPlus.service.utils.StringUtils.pluralizeWord;
 
 public class BuildStep {
     String itemName;
@@ -9,7 +12,7 @@ public class BuildStep {
 
     BigFraction itemQuantity;
 
-    String building;
+    Building building;
 
     BigFraction buildingQuantity;
 
@@ -33,7 +36,7 @@ public class BuildStep {
         return recipeName;
     }
 
-    public String getBuilding() {
+    public Building getBuilding() {
         return building;
     }
 
@@ -42,18 +45,15 @@ public class BuildStep {
     }
 
     public String toString() {
-        String plural = buildingQuantity != BigFraction.ONE ? "s" : "";
-        String pluralBuilding = building.substring(building.length() - 1).equals("y") && plural == "s"
-                ? building.substring(0, building.length() - 1).concat("ie")
-                : building;
-
-        String displayItemQuantity = "";
-        String displayBuildingQuantity = "";
+        String buildingName = building.getName();
+        String pluralBuilding = buildingQuantity != BigFraction.ONE
+                ? pluralizeWord(buildingName)
+                : buildingName;
 
         return itemQuantity +
                 " " + itemName +
                 " in " + buildingQuantity +
-                " " + pluralBuilding + plural +
+                " " + pluralBuilding +
                 " using the recipe " + recipeName;
     }
 }

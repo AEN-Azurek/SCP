@@ -1,11 +1,13 @@
 package com.scp.CalculatorPlus.model;
 
+import com.scp.CalculatorPlus.model.buildings.Building;
 import org.apache.commons.math3.fraction.BigFraction;
 
 import javax.persistence.*;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 @Entity
 @Table(name = "recipe", schema = "dbo")
@@ -18,15 +20,16 @@ public class Recipe implements Serializable {
     @Column(name = "recipe_name")
     private String recipeName;
 
-    @Column(name = "building_name")
-    private String buildingName;
+    @ManyToOne
+    @JoinColumn(name = "building_id")
+    private Building building;
 
     @ManyToOne
     @JoinColumn(name = "primary_output")
     private Item primaryOutput;
 
     @Column(name = "crafting_time")
-    private double craftingTime;
+    private Double craftingTime;
 
     @Column(name = "default_recipe")
     private boolean defaultRecipe;
@@ -34,14 +37,25 @@ public class Recipe implements Serializable {
     @Column(name = "date_created")
     private java.sql.Timestamp dateCreated;
 
-
     public Recipe() {
     }
 
-    public Recipe(long id, String recipeName, String buildingName, Item primaryOutput, double craftingTime, boolean defaultRecipe, Timestamp dateCreated) {
+    public Recipe(long id, String recipeName, Building building, Item primaryOutput, double craftingTime,
+                  boolean defaultRecipe) {
         this.id = id;
         this.recipeName = recipeName;
-        this.buildingName = buildingName;
+        this.building = building;
+        this.primaryOutput = primaryOutput;
+        this.craftingTime = craftingTime;
+        this.defaultRecipe = defaultRecipe;
+        this.dateCreated = Timestamp.from(Instant.now());
+    }
+
+    public Recipe(long id, String recipeName, Building building, Item primaryOutput, double craftingTime,
+                  boolean defaultRecipe, Timestamp dateCreated) {
+        this.id = id;
+        this.recipeName = recipeName;
+        this.building = building;
         this.primaryOutput = primaryOutput;
         this.craftingTime = craftingTime;
         this.defaultRecipe = defaultRecipe;
@@ -64,12 +78,12 @@ public class Recipe implements Serializable {
         this.recipeName = recipeName;
     }
 
-    public String getBuildingName() {
-        return buildingName;
+    public Building getBuildingName() {
+        return building;
     }
 
-    public void setBuildingName(String buildingName) {
-        this.buildingName = buildingName;
+    public void setBuildingName(Building building) {
+        this.building = building;
     }
 
     public Item getPrimaryOutput() {
@@ -98,10 +112,6 @@ public class Recipe implements Serializable {
 
     public Timestamp getDateCreated() {
         return dateCreated;
-    }
-
-    public void setDateCreated(Timestamp dateCreated) {
-        this.dateCreated = dateCreated;
     }
 
     public BigFraction getCyclesPerMinute() {
