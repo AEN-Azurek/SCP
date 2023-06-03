@@ -5,6 +5,7 @@ import com.scp.CalculatorPlus.repository.RecipeItemRepository;
 import com.scp.CalculatorPlus.repository.RecipeRepository;
 import com.scp.CalculatorPlus.service.factory.RecipeItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeService;
+import com.scp.CalculatorPlus.utils.selector.impl.NormalizedSinkValueSelector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -109,7 +110,9 @@ public class RecipeServiceTests {
         mockFindPrimaryItem_Valid();
         mockIsRecipeItemInput_Valid();
 
-        Recipe bestRecipe = recipeService.findBestRecipeForItemByNormalizedSinkPoints(SCREW);
+        NormalizedSinkValueSelector selector = new NormalizedSinkValueSelector(recipeService, recipeItemService);
+
+        Recipe bestRecipe = selector.selectBestRecipe(SCREW);
 
         assertEquals(SCREW_RECIPE, bestRecipe);
     }
