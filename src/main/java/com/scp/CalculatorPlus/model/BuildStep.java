@@ -3,9 +3,7 @@ package com.scp.CalculatorPlus.model;
 import com.scp.CalculatorPlus.model.buildings.Building;
 import org.apache.commons.math3.fraction.BigFraction;
 
-import java.math.RoundingMode;
-
-import static com.scp.CalculatorPlus.service.utils.StringUtils.*;
+import static com.scp.CalculatorPlus.utils.StringUtils.*;
 
 public class BuildStep {
     String itemName;

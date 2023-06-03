@@ -2,6 +2,7 @@ package com.scp.CalculatorPlus.service.factory;
 
 import com.scp.CalculatorPlus.model.*;
 import com.scp.CalculatorPlus.repository.RecipeRepository;
+import com.scp.CalculatorPlus.utils.selector.RecipeSelector;
 import org.apache.commons.math3.fraction.BigFraction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,51 +50,6 @@ public class RecipeService {
     }
 
     /**
-     * WIP function as application is developed and more inputs/outputs are considered <br>
-     * Determines the best recipe for an item based on the
-     *
-     * @param itemName - String of desired output item
-     * @return Optimal recipe given inputs
-     */
-    public Recipe findBestRecipeForItemByNormalizedSinkPoints(String itemName) {
-        return findBestRecipeForItemByNormalizedSinkPoints(itemService.findByItemName(itemName));
-    }
-
-    /**
-     * WIP function as application is developed and more inputs/outputs are considered
-     *
-     * @param item - Desired output item
-     * @return Optimal recipe given inputs
-     */
-    public Recipe findBestRecipeForItemByNormalizedSinkPoints(Item item) {
-        List<Recipe> recipes = findAllRecipesForItem(item);
-        BigFraction largest = BigFraction.ZERO;
-        Recipe bestRecipe = null;
-
-        for (Recipe recipe : recipes) {
-            List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
-
-            BigFraction normalizedSinkValue = getNormalizedSinkValueOfRecipe(recipe, recipeItems);
-
-            if (normalizedSinkValue.compareTo(largest) > 0) {
-                largest = normalizedSinkValue;
-                bestRecipe = recipe;
-            }
-        }
-
-        return bestRecipe;
-    }
-
-    public void findBestRecipeForItemByPowerConsumption() {
-        // TODO: Best recipe by power consumption -> will need building power consumption
-        // TODO: Determine how to code for varying power (ex. Particle Accelerator)
-    }
-
-    public void findBestRecipeForItemByBuildingFootprint() {
-        // TODO: Best recipe by building footprint -> Will need building width and length
-    }
-
-    /**
      * Given the parameters, determines the normalized sink value of a recipe.<br>
      * This can be described as the factor by which the base resources sink values are being multiplied
      * by to reach the output items sink value. The higher, the better. <br>
@@ -102,8 +58,8 @@ public class RecipeService {
      * @param recipe - Recipe object to find the normalized sink value for
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe) {
-        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), BigFraction.ONE);
+    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, RecipeSelector selector) {
+        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), BigFraction.ONE, selector);
     }
 
     /**
@@ -117,8 +73,8 @@ public class RecipeService {
      * @param quantity - Desired number of primary output of the given Recipe
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, BigFraction quantity) {
-        return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItemService.getRecipeItems(recipe), quantity);
+    public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, BigFraction quantity, RecipeSelector selector) {
+        return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItemService.getRecipeItems(recipe), quantity, selector);
     }
 
     /**
@@ -131,8 +87,8 @@ public class RecipeService {
      * @param quantity - Desired number of primary output of the given Recipe
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, BigFraction quantity) {
-        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), quantity);
+    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, BigFraction quantity, RecipeSelector selector) {
+        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), quantity, selector);
     }
 
     /**
@@ -145,8 +101,8 @@ public class RecipeService {
      * @param recipeItems - List of items associated with the given Recipe
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, List<RecipeItem> recipeItems) {
-        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItems, BigFraction.ONE);
+    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, List<RecipeItem> recipeItems, RecipeSelector selector) {
+        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItems, BigFraction.ONE, selector);
     }
 
     /**
@@ -160,8 +116,8 @@ public class RecipeService {
      * @param recipeItems - List of items associated with the given Recipe
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, List<RecipeItem> recipeItems) {
-        return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItems, BigFraction.ONE);
+    public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, List<RecipeItem> recipeItems, RecipeSelector selector) {
+        return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItems, BigFraction.ONE, selector);
     }
 
     /**
@@ -180,7 +136,8 @@ public class RecipeService {
             boolean isPrimaryRecipe,
             Recipe recipe,
             List<RecipeItem> recipeItems,
-            BigFraction quantity) {
+            BigFraction quantity,
+            RecipeSelector selector) {
 
         BigFraction totalBaseSinkValue = BigFraction.ZERO;
 
@@ -199,10 +156,13 @@ public class RecipeService {
                 continue;
             }
 
+            Recipe bestRecipe = selector.selectBestRecipe(recipeItem.getItem());
+
             totalBaseSinkValue = totalBaseSinkValue.add(getNormalizedSinkValueOfRecipe(
                     false,
-                    findBestRecipeForItemByNormalizedSinkPoints(recipeItem.getItem()),
-                    itemQuantity
+                    bestRecipe,
+                    itemQuantity,
+                    selector
             ).multiply(recipeItem.getQuantity()));
         }
 
@@ -224,7 +184,7 @@ public class RecipeService {
      * @param quantity - Desired number of primary output of the given Recipe
      * @return the steps needed to achieve the desired output
      */
-    public BuildSteps getAllBuildStepsForBestRecipeByNormalizedSinkValue(Recipe recipe, BigFraction quantity) {
+    public BuildSteps getAllBuildStepsForBestRecipe(Recipe recipe, BigFraction quantity, RecipeSelector selector) {
         BuildSteps buildSteps = new BuildSteps();
         Map<Recipe, BuildStep> buildStepMap = new LinkedHashMap<>();
         Map<Item, BigFraction> baseResourceInputQuantity = new LinkedHashMap<>();
@@ -254,10 +214,10 @@ public class RecipeService {
             }
             BigFraction recipeItemsQuantity = new BigFraction(recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity());
             BigFraction totalRecipeItemsQuantity = quantity.divide(recipeItemsQuantity);
-            BuildSteps requisiteBuildSteps = getAllBuildStepsForBestRecipeByNormalizedSinkValue(
-                    findBestRecipeForItemByNormalizedSinkPoints(
-                            recipeItem.getItem()),
-                    totalRecipeItemsQuantity
+            BuildSteps requisiteBuildSteps = getAllBuildStepsForBestRecipe(
+                    selector.selectBestRecipe(recipeItem.getItem()),
+                    totalRecipeItemsQuantity,
+                    selector
             );
             buildSteps.addToBuildStepMap(requisiteBuildSteps.getBuildStepList());
             buildSteps.addToBaseResourceInputQuantity(requisiteBuildSteps.getBaseResourceInputQuantity());

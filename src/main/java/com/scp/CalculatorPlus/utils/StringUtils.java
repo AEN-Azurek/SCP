@@ -1,4 +1,4 @@
-package com.scp.CalculatorPlus.service.utils;
+package com.scp.CalculatorPlus.utils;
 
 import org.apache.commons.math3.fraction.BigFraction;
 
