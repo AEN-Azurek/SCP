@@ -13,10 +13,10 @@ import java.util.List;
 public class RecipeItemService {
 
     @Autowired
-    private RecipeItemRepository recipeItemsRepo;
+    private RecipeItemRepository recipeItemRepo;
 
     public List<RecipeItem> getRecipeItems(Recipe recipe) {
-        return recipeItemsRepo.findByRecipe(recipe);
+        return recipeItemRepo.findByRecipe(recipe);
     }
 
     public boolean isRecipeItemInput(RecipeItem recipeItem) {

@@ -2,10 +2,7 @@ package com.scp.CalculatorPlus.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.scp.CalculatorPlus.model.BuildStep;
-import com.scp.CalculatorPlus.model.Item;
-import com.scp.CalculatorPlus.model.Recipe;
-import com.scp.CalculatorPlus.model.RecipeItem;
+import com.scp.CalculatorPlus.model.*;
 import com.scp.CalculatorPlus.service.factory.ItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeService;
@@ -14,11 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.scp.CalculatorPlus.constants.MapConstants.*;
+import static com.scp.CalculatorPlus.service.utils.StringUtils.bigFractionToString;
 
 @RestController
 public class CalculationController {
@@ -102,23 +101,42 @@ public class CalculationController {
     public ResponseEntity<String> calculateEntireRecipe(@RequestBody Map<String, String> json) throws JsonProcessingException {
         Recipe recipe = recipeService.findBestRecipeForItemByNormalizedSinkPoints(json.get(ITEM_NAME));
         BigFraction quantity = new BigFraction(Integer.valueOf(json.get(QUANTITY)));
+        StringBuilder buildStepString = new StringBuilder();
 
-        StringBuilder buildSteps = new StringBuilder();
-        List<BuildStep> buildStepsList = recipeService.calculateBuildStepsForEntireRecipe(recipe, quantity);
+        BuildSteps buildSteps = recipeService.getAllBuildStepsForBestRecipeByNormalizedSinkValue(recipe, quantity);
 
-        buildSteps.append("<p>");
-        buildSteps.append("To build ").append(quantity).append(" ");
-        buildSteps.append(recipe.getPrimaryOutput().getItemName());
-        buildSteps.append(" using the recipe ").append(recipe.getRecipeName());
-        buildSteps.append(", use the following set up");
-        buildSteps.append("</p>");
+        buildStepString.append("<p>");
+        buildStepString.append("To build ").append(quantity).append(" ");
+        buildStepString.append(recipe.getPrimaryOutput().getItemName());
+        buildStepString.append(" using the recipe ").append(recipe.getRecipeName());
+        buildStepString.append(", use the following set up");
+        buildStepString.append("</p>");
 
-        for (BuildStep buildStep : buildStepsList) {
-            buildSteps.append("<p>");
-            buildSteps.append(buildStep.toString());
-            buildSteps.append("</p>");
+        for (BuildStep buildStep : buildSteps.getBuildStepList().values()) {
+            buildStepString.append("<p>");
+            buildStepString.append(buildStep.toString());
+            buildStepString.append("</p>");
         }
 
-        return ResponseEntity.ok().body((new ObjectMapper()).writeValueAsString(buildSteps.toString()));
+        buildStepString.append("<p>");
+        buildStepString.append("With the following item quantities as inputs:");
+        buildStepString.append("</p>");
+
+        buildStepString.append("<ul>");
+        for (Map.Entry<Item, BigFraction> entry : buildSteps.getBaseResourceInputQuantity().entrySet()) {
+            buildStepString.append("<li>");
+            buildStepString.append(baseResourceToString(entry));
+            buildStepString.append("</li>");
+        }
+        buildStepString.append("</ul>");
+
+        return ResponseEntity.ok().body((new ObjectMapper()).writeValueAsString(buildStepString.toString()));
+    }
+
+    private String baseResourceToString(Map.Entry<Item, BigFraction> entry) {
+        Item item = entry.getKey();
+        String numberOfItems = bigFractionToString(entry.getValue());
+
+        return numberOfItems + " " + item.getItemName() + " per minute";
     }
 }

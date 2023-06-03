@@ -9,7 +9,7 @@ public class BuildingAttribute {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     @ManyToOne
     @JoinColumn(name = "building_id")
@@ -25,18 +25,18 @@ public class BuildingAttribute {
     @Column(name = "date_created")
     private java.sql.Timestamp dateCreated;
 
-    public BuildingAttribute(Long id, Building building, Attribute attribute, String attributeValue) {
+    public BuildingAttribute(long id, Building building, Attribute attribute, String attributeValue) {
         this.id = id;
         this.building = building;
         this.attribute = attribute;
         this.attributeValue = attributeValue;
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 

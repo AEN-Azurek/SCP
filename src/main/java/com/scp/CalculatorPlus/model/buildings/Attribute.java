@@ -10,7 +10,7 @@ public class Attribute {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     @Column(name = "attribute_name")
     private String attributeName;
@@ -18,23 +18,23 @@ public class Attribute {
     @Column(name = "date_created")
     private java.sql.Timestamp dateCreated;
 
-    public Attribute(Long id, String attributeName) {
+    public Attribute(long id, String attributeName) {
         this.id = id;
         this.attributeName = attributeName;
         this.dateCreated = Timestamp.from(Instant.now());
     }
 
-    public Attribute(Long id, String attributeName, Timestamp dateCreated) {
+    public Attribute(long id, String attributeName, Timestamp dateCreated) {
         this.id = id;
         this.attributeName = attributeName;
         this.dateCreated = dateCreated;
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 

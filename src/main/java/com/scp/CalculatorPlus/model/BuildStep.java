@@ -3,7 +3,9 @@ package com.scp.CalculatorPlus.model;
 import com.scp.CalculatorPlus.model.buildings.Building;
 import org.apache.commons.math3.fraction.BigFraction;
 
-import static com.scp.CalculatorPlus.service.utils.StringUtils.pluralizeWord;
+import java.math.RoundingMode;
+
+import static com.scp.CalculatorPlus.service.utils.StringUtils.*;
 
 public class BuildStep {
     String itemName;
@@ -50,10 +52,15 @@ public class BuildStep {
                 ? pluralizeWord(buildingName)
                 : buildingName;
 
-        return itemQuantity +
+        return itemQuantity.bigDecimalValue() +
                 " " + itemName +
-                " in " + buildingQuantity +
+                " in " + bigFractionToString(buildingQuantity) +
                 " " + pluralBuilding +
                 " using the recipe " + recipeName;
+    }
+
+    public void add(BuildStep value) {
+        this.itemQuantity = this.itemQuantity.add(value.itemQuantity);
+        this.buildingQuantity = this.buildingQuantity.add(value.buildingQuantity);
     }
 }

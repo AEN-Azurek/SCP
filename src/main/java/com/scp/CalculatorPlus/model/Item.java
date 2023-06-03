@@ -4,6 +4,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Objects;
 
 @Entity
 @Table(name = "item", schema = "dbo")
@@ -83,5 +84,19 @@ public class Item implements Serializable {
     @Override
     public String toString() {
         return itemName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Item other = (Item) o;
+
+        return Objects.equals(this.id, other.id) &&
+                Objects.equals(this.hasRecipe, other.hasRecipe) &&
+                Objects.equals(this.itemName, other.itemName) &&
+                Objects.equals(this.sinkValue, other.sinkValue) &&
+                Objects.equals(this.dateCreated, other.dateCreated);
     }
 }
