@@ -8,6 +8,7 @@ import com.scp.CalculatorPlus.service.factory.RecipeItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeService;
 import com.scp.CalculatorPlus.utils.selector.RecipeSelector;
 import com.scp.CalculatorPlus.utils.selector.impl.NormalizedSinkValueSelector;
+import com.scp.CalculatorPlus.utils.selector.impl.PowerConsumptionSelector;
 import org.apache.commons.math3.fraction.BigFraction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -65,7 +66,7 @@ public class CalculationController {
 
     @PostMapping("/bestRecipe")
     public ResponseEntity<String> getBestRecipeForDesiredItem(@RequestBody Map<String, String> json) throws JsonProcessingException {
-        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService, recipeItemService);
+        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService);
         Item item = itemService.findByItemName(json.get(ITEM_NAME));
         Recipe recipe = selector.selectBestRecipe(item);
 
@@ -87,18 +88,27 @@ public class CalculationController {
 
     @PostMapping("/getNormalizedSinkValueForRecipe")
     public ResponseEntity<String> getNormalizedSinkValueForRecipe(@RequestBody Map<String, String> json) throws JsonProcessingException {
-        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService, recipeItemService);
+        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService);
         Item item = itemService.findByItemName(json.get(ITEM_NAME));
         Recipe recipe = selector.selectBestRecipe(item);
 
-        BigFraction normalizedSinkValue = recipeService.getNormalizedSinkValueOfRecipe(recipe, selector);
+        BigFraction normalizedSinkValue = recipeService.getNormalizedSinkValueOfRecipe(recipe);
 
         return ResponseEntity.ok().body(normalizedSinkValue.getNumeratorAsInt() + "/" + normalizedSinkValue.getDenominatorAsInt());
     }
 
     @PostMapping("/findBestRecipeForItemByNormalizedSinkPoints")
     public ResponseEntity<String> findBestRecipeForItemByNormalizedSinkPoints(@RequestBody Map<String, String> json) throws JsonProcessingException {
-        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService, recipeItemService);
+        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService);
+        Item item = itemService.findByItemName(json.get(ITEM_NAME));
+        Recipe recipe = selector.selectBestRecipe(item);
+
+        return ResponseEntity.ok().body((new ObjectMapper()).writeValueAsString(recipe));
+    }
+
+    @PostMapping("/findBestRecipeForItemByPowerConsumption")
+    public ResponseEntity<String> findBestRecipeForItemByPowerConsumption(@RequestBody Map<String, String> json) throws JsonProcessingException {
+        RecipeSelector selector = new PowerConsumptionSelector(recipeService);
         Item item = itemService.findByItemName(json.get(ITEM_NAME));
         Recipe recipe = selector.selectBestRecipe(item);
 
@@ -107,7 +117,7 @@ public class CalculationController {
 
     @PostMapping("/calculateEntireRecipe")
     public ResponseEntity<String> calculateEntireRecipe(@RequestBody Map<String, String> json) throws JsonProcessingException {
-        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService, recipeItemService);
+        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService);
         Recipe recipe = selector.selectBestRecipe(itemService.findByItemName(json.get(ITEM_NAME)));
         BigFraction quantity = new BigFraction(Integer.parseInt(json.get(QUANTITY)));
         StringBuilder buildStepString = new StringBuilder();

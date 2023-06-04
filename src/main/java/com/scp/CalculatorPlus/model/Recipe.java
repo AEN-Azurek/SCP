@@ -78,11 +78,11 @@ public class Recipe implements Serializable {
         this.recipeName = recipeName;
     }
 
-    public Building getBuildingName() {
+    public Building getBuilding() {
         return building;
     }
 
-    public void setBuildingName(Building building) {
+    public void setBuilding(Building building) {
         this.building = building;
     }
 

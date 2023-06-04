@@ -1,8 +1,11 @@
 package com.scp.CalculatorPlus.service.factory;
 
 import com.scp.CalculatorPlus.model.*;
+import com.scp.CalculatorPlus.model.buildings.BuildingAttribute;
 import com.scp.CalculatorPlus.repository.RecipeRepository;
 import com.scp.CalculatorPlus.utils.selector.RecipeSelector;
+import com.scp.CalculatorPlus.utils.selector.impl.NormalizedSinkValueSelector;
+import com.scp.CalculatorPlus.utils.selector.impl.PowerConsumptionSelector;
 import org.apache.commons.math3.fraction.BigFraction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,10 +14,16 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+import static com.scp.CalculatorPlus.constants.DatabaseConstants.*;
+import static com.scp.CalculatorPlus.service.calculation.PowerCalculations.calculateAdjustedPowerConsumption;
+
 @Service
 public class RecipeService {
 
     Logger logger = LoggerFactory.getLogger(RecipeService.class);
+
+    @Autowired
+    private AttributeService attributeService;
 
     @Autowired
     private ItemService itemService;
@@ -58,8 +67,8 @@ public class RecipeService {
      * @param recipe - Recipe object to find the normalized sink value for
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, RecipeSelector selector) {
-        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), BigFraction.ONE, selector);
+    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe) {
+        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), BigFraction.ONE);
     }
 
     /**
@@ -73,8 +82,8 @@ public class RecipeService {
      * @param quantity - Desired number of primary output of the given Recipe
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, BigFraction quantity, RecipeSelector selector) {
-        return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItemService.getRecipeItems(recipe), quantity, selector);
+    public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, BigFraction quantity) {
+        return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItemService.getRecipeItems(recipe), quantity);
     }
 
     /**
@@ -87,8 +96,8 @@ public class RecipeService {
      * @param quantity - Desired number of primary output of the given Recipe
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, BigFraction quantity, RecipeSelector selector) {
-        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), quantity, selector);
+    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, BigFraction quantity) {
+        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItemService.getRecipeItems(recipe), quantity);
     }
 
     /**
@@ -101,8 +110,8 @@ public class RecipeService {
      * @param recipeItems - List of items associated with the given Recipe
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, List<RecipeItem> recipeItems, RecipeSelector selector) {
-        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItems, BigFraction.ONE, selector);
+    public BigFraction getNormalizedSinkValueOfRecipe(Recipe recipe, List<RecipeItem> recipeItems) {
+        return getNormalizedSinkValueOfRecipe(true, recipe, recipeItems, BigFraction.ONE);
     }
 
     /**
@@ -116,8 +125,8 @@ public class RecipeService {
      * @param recipeItems - List of items associated with the given Recipe
      * @return the factor by which the base input resources total sink points are bing increased by to achieve the output sink points
      */
-    public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, List<RecipeItem> recipeItems, RecipeSelector selector) {
-        return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItems, BigFraction.ONE, selector);
+    public BigFraction getNormalizedSinkValueOfRecipe(boolean isPrimaryRecipe, Recipe recipe, List<RecipeItem> recipeItems) {
+        return getNormalizedSinkValueOfRecipe(isPrimaryRecipe, recipe, recipeItems, BigFraction.ONE);
     }
 
     /**
@@ -136,8 +145,7 @@ public class RecipeService {
             boolean isPrimaryRecipe,
             Recipe recipe,
             List<RecipeItem> recipeItems,
-            BigFraction quantity,
-            RecipeSelector selector) {
+            BigFraction quantity) {
 
         BigFraction totalBaseSinkValue = BigFraction.ZERO;
 
@@ -146,23 +154,20 @@ public class RecipeService {
         for (RecipeItem recipeItem : recipeItems) {
             if (!recipeItemService.isRecipeItemInput(recipeItem)) continue;
 
-            BigFraction itemQuantity = BigFraction.ZERO;
-            itemQuantity = itemQuantity.add(recipeItem.getQuantity());
-            itemQuantity = itemQuantity.divide(primaryRecipeItem.getQuantity());
-            itemQuantity = itemQuantity.multiply(quantity);
+            BigFraction itemQuantity = getItemQuantity(recipeItem, primaryRecipeItem, quantity);
 
             if (!recipeItem.getItem().hasRecipe()) {
                 totalBaseSinkValue = totalBaseSinkValue.add(itemQuantity.multiply(recipeItem.getItem().getSinkValue()));
                 continue;
             }
 
+            NormalizedSinkValueSelector selector = new NormalizedSinkValueSelector(this);
             Recipe bestRecipe = selector.selectBestRecipe(recipeItem.getItem());
 
             totalBaseSinkValue = totalBaseSinkValue.add(getNormalizedSinkValueOfRecipe(
                     false,
                     bestRecipe,
-                    itemQuantity,
-                    selector
+                    itemQuantity
             ).multiply(recipeItem.getQuantity()));
         }
 
@@ -173,6 +178,68 @@ public class RecipeService {
         totalOutputSinkValue = totalOutputSinkValue.divide(totalBaseSinkValue);
 
         return totalOutputSinkValue;
+    }
+
+    public double getPowerUsageOfRecipe(Recipe recipe) {
+        List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
+        int primaryItemQuantity = recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity();
+        return getPowerUsageOfRecipe(recipe, recipeItems, recipe.getCyclesPerMinute().multiply(primaryItemQuantity));
+    }
+
+    public double getNormalizedPowerUsageOfRecipe(Recipe recipe) {
+        List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
+        BigFraction quantity = new BigFraction(recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity());
+        double powerUsage = getPowerUsageOfRecipe(recipe);
+        return powerUsage / (quantity.multiply(recipe.getCyclesPerMinute())).doubleValue();
+    }
+
+    public double getPowerUsageOfRecipe(
+            Recipe recipe,
+            List<RecipeItem> recipeItems,
+            BigFraction quantity) {
+
+        RecipeItem primaryRecipeItem = recipeItemService.findPrimaryItem(recipe, recipeItems);
+
+        BuildingAttribute powerConsumption = recipe.getBuilding().getAttribute(attributeService.findByAttributeName(POWER_CONSUMPTION));
+        BigFraction outputItemsPerMinute = recipe.getCyclesPerMinute().multiply(primaryRecipeItem.getQuantity());
+        BigFraction numberOfBuildings = quantity.divide(outputItemsPerMinute);
+        int basePowerUsage = Integer.parseInt(powerConsumption.getAttributeValue());
+
+        double totalPowerConsumption = calculateRecipePowerConsumption(numberOfBuildings, basePowerUsage);
+
+        for (RecipeItem recipeItem : recipeItems) {
+            if (!recipeItemService.isRecipeItemInput(recipeItem)) continue;
+
+            if (!recipeItem.getItem().hasRecipe()) continue;
+
+            BigFraction itemQuantity = getItemQuantity(recipeItem, primaryRecipeItem, quantity);
+
+            PowerConsumptionSelector selector = new PowerConsumptionSelector(this);
+            Recipe bestRecipe = selector.selectBestRecipe(recipeItem.getItem());
+
+            totalPowerConsumption += getPowerUsageOfRecipe(bestRecipe);
+        }
+
+        return totalPowerConsumption;
+    }
+
+    private double calculateRecipePowerConsumption(BigFraction numberOfBuildings, int basePowerUsage) {
+        int wholeNumber = numberOfBuildings.intValue();
+        BigFraction fractionalPart = numberOfBuildings.subtract(wholeNumber);
+
+        double totalPowerConsumption = wholeNumber * basePowerUsage;
+        if (fractionalPart.compareTo(BigFraction.ZERO) > 0) {
+            totalPowerConsumption += calculateAdjustedPowerConsumption(basePowerUsage, fractionalPart);
+        }
+
+        return totalPowerConsumption;
+    }
+
+    private BigFraction getItemQuantity(RecipeItem recipeItem, RecipeItem primaryRecipeItem, BigFraction quantity) {
+        BigFraction itemQuantity = BigFraction.ZERO;
+        itemQuantity = itemQuantity.add(recipeItem.getQuantity());
+        itemQuantity = itemQuantity.divide(primaryRecipeItem.getQuantity());
+        return itemQuantity.multiply(quantity);
     }
 
     /**
@@ -225,5 +292,4 @@ public class RecipeService {
 
         return buildSteps;
     }
-
 }

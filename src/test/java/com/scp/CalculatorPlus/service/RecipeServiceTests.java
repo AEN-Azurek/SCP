@@ -1,11 +1,14 @@
 package com.scp.CalculatorPlus.service;
 
 import com.scp.CalculatorPlus.model.Recipe;
-import com.scp.CalculatorPlus.repository.RecipeItemRepository;
+import com.scp.CalculatorPlus.model.buildings.BuildingAttribute;
 import com.scp.CalculatorPlus.repository.RecipeRepository;
+import com.scp.CalculatorPlus.service.factory.AttributeService;
 import com.scp.CalculatorPlus.service.factory.RecipeItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeService;
 import com.scp.CalculatorPlus.utils.selector.impl.NormalizedSinkValueSelector;
+import com.scp.CalculatorPlus.utils.selector.impl.PowerConsumptionSelector;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,10 +20,16 @@ import java.util.Arrays;
 import static com.scp.CalculatorPlus.constants.models.ItemConstants.*;
 import static com.scp.CalculatorPlus.constants.models.RecipeConstants.*;
 import static com.scp.CalculatorPlus.constants.models.RecipeItemConstants.*;
+import static com.scp.CalculatorPlus.constants.models.buildings.AttributeConstants.*;
+import static com.scp.CalculatorPlus.constants.models.buildings.BuildingAttributeConstants.*;
+import static com.scp.CalculatorPlus.constants.models.buildings.BuildingConstants.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 public class RecipeServiceTests {
+
+    @Mock
+    private AttributeService attributeService;
 
     @Mock
     private RecipeRepository recipeRepo;
@@ -31,6 +40,30 @@ public class RecipeServiceTests {
     @InjectMocks
     private RecipeService recipeService;
 
+    @BeforeAll
+    static void init() {
+        ASSEMBLER.addAllAttributes(ASSEMBLER_ATTRIBUTES);
+        BLENDER.addAllAttributes(BLENDER_ATTRIBUTES);
+        CONSTRUCTOR.addAllAttributes(CONSTRUCTOR_ATTRIBUTES);
+        FOUNDRY.addAllAttributes(FOUNDRY_ATTRIBUTES);
+        MANUFACTURER.addAllAttributes(MANUFACTURER_ATTRIBUTES);
+        MINER_MK1.addAllAttributes(MINER_MK1_ATTRIBUTES);
+        MINER_MK2.addAllAttributes(MINER_MK2_ATTRIBUTES);
+        MINER_MK3.addAllAttributes(MINER_MK3_ATTRIBUTES);
+        OIL_EXTRACTOR.addAllAttributes(OIL_EXTRACTOR_ATTRIBUTES);
+        PACKAGER.addAllAttributes(PACKAGER_ATTRIBUTES);
+        REFINERY.addAllAttributes(REFINERY_ATTRIBUTES);
+        SMELTER.addAllAttributes(SMELTER_ATTRIBUTES);
+        WATER_EXTRACTOR.addAllAttributes(WATER_EXTRACTOR_ATTRIBUTES);
+        PARTICLE_ACCELERATOR.addAllAttributes(PARTICLE_ACCELERATOR_ATTRIBUTES);
+        RESOURCE_WELL_PRESSURIZER.addAllAttributes(RESOURCE_WELL_PRESSURIZER_ATTRIBUTES);
+        BIOMASS_BURNER.addAllAttributes(BIOMASS_BURNER_ATTRIBUTES);
+        COAL_GENERATOR.addAllAttributes(COAL_GENERATOR_ATTRIBUTES);
+        FUEL_GENERATOR.addAllAttributes(FUEL_GENERATOR_ATTRIBUTES);
+        GEOTHERMAL_GENERATOR.addAllAttributes(GEOTHERMAL_GENERATOR_ATTRIBUTES);
+        NUCLEAR_POWER_PLANT.addAllAttributes(NUCLEAR_POWER_PLANT_ATTRIBUTES);
+        POWER_STORAGE.addAllAttributes(POWER_STORAGE_ATTRIBUTES);
+    }
 
     @BeforeEach
     void setUp() {
@@ -103,17 +136,39 @@ public class RecipeServiceTests {
         when(recipeItemService.isRecipeItemInput(STEEL_SCREW_RECIPE_ITEMS.get(0))).thenReturn(true);
     }
 
+    private void mockFindAttributeByName() {
+        when(attributeService.findByAttributeName(POWER_CONSUMPTION_STRING)).thenReturn(POWER_CONSUMPTION);
+        when(attributeService.findByAttributeName(POWER_PRODUCTION_STRING)).thenReturn(POWER_PRODUCTION);
+        when(attributeService.findByAttributeName(VARIABLE_MIN_POWER_CONSUMPTION_STRING)).thenReturn(VARIABLE_MIN_POWER_CONSUMPTION);
+        when(attributeService.findByAttributeName(VARIABLE_MIN_POWER_PRODUCTION_STRING)).thenReturn(VARIABLE_MIN_POWER_PRODUCTION);
+    }
+
     @Test
-    void findBestRecipeForItemByNormalizedSinkPoints_() {
+    void findBestRecipeForItemByNormalizedSinkPoints_ShouldBeNormalScrewRecipe() {
         mockFindAllByPrimaryOutput_Valid();
         mockGetRecipeItems_Valid();
         mockFindPrimaryItem_Valid();
         mockIsRecipeItemInput_Valid();
 
-        NormalizedSinkValueSelector selector = new NormalizedSinkValueSelector(recipeService, recipeItemService);
+        NormalizedSinkValueSelector selector = new NormalizedSinkValueSelector(recipeService);
 
         Recipe bestRecipe = selector.selectBestRecipe(SCREW);
 
         assertEquals(SCREW_RECIPE, bestRecipe);
+    }
+
+    @Test
+    void findBestRecipeForItemByPowerUsage_ShouldBeSteelScrewRecipe() {
+        mockFindAllByPrimaryOutput_Valid();
+        mockGetRecipeItems_Valid();
+        mockFindPrimaryItem_Valid();
+        mockIsRecipeItemInput_Valid();
+        mockFindAttributeByName();
+
+        PowerConsumptionSelector selector = new PowerConsumptionSelector(recipeService);
+
+        Recipe bestRecipe = selector.selectBestRecipe(SCREW);
+
+        assertEquals(STEEL_SCREW_RECIPE, bestRecipe);
     }
 }

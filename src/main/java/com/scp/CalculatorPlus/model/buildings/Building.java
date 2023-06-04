@@ -83,11 +83,27 @@ public class Building {
         attribute.setBuilding(this);
     }
 
+    public void addAllAttributes(List<BuildingAttribute> attributes) {
+        for (BuildingAttribute attribute : attributes) {
+            addAttribute(attribute);
+        }
+    }
+
     public void removeAttribute(BuildingAttribute attribute) {
         if (attributes != null) {
             attributes.remove(attribute);
             attribute.setBuilding(null);
         }
+    }
+
+    public BuildingAttribute getAttribute(Attribute attribute) {
+        if (attributes == null) return null;
+
+        for (BuildingAttribute buildingAttribute : attributes) {
+            if (!buildingAttribute.getAttribute().equals(attribute)) continue;
+            return buildingAttribute;
+        }
+        return null;
     }
 
     @Override

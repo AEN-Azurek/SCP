@@ -20,7 +20,7 @@ public class BuildStep {
         this.itemName = recipe.getPrimaryOutput().getItemName();
         this.recipeName = recipe.getRecipeName();
         this.itemQuantity = itemQuantity;
-        this.building = recipe.getBuildingName();
+        this.building = recipe.getBuilding();
         this.buildingQuantity = buildingQuantity;
     }
 

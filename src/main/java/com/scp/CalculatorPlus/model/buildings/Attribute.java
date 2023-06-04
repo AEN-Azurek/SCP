@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 
 @Entity
-@Table(name = "attribute")
+@Table(name = "attribute", schema = "dbo")
 public class Attribute {
 
     @Id
@@ -17,6 +17,9 @@ public class Attribute {
 
     @Column(name = "date_created")
     private java.sql.Timestamp dateCreated;
+
+    public Attribute() {
+    }
 
     public Attribute(long id, String attributeName) {
         this.id = id;

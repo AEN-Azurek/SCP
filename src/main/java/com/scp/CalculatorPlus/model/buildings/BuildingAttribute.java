@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "building_attribute")
+@Table(name = "building_attribute", schema = "dbo")
 public class BuildingAttribute {
 
     @Id
@@ -24,6 +24,9 @@ public class BuildingAttribute {
 
     @Column(name = "date_created")
     private java.sql.Timestamp dateCreated;
+
+    public BuildingAttribute() {
+    }
 
     public BuildingAttribute(long id, Building building, Attribute attribute, String attributeValue) {
         this.id = id;
