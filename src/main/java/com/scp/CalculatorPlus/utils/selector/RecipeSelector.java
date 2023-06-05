@@ -2,6 +2,7 @@ package com.scp.CalculatorPlus.utils.selector;
 
 import com.scp.CalculatorPlus.model.Item;
 import com.scp.CalculatorPlus.model.Recipe;
+import org.apache.commons.math3.fraction.BigFraction;
 
 @FunctionalInterface
 public interface RecipeSelector {
@@ -12,5 +13,5 @@ public interface RecipeSelector {
      * @param item
      * @return
      */
-    Recipe selectBestRecipe(Item item);
+    Recipe selectBestRecipe(Item item, BigFraction quantity);
 }

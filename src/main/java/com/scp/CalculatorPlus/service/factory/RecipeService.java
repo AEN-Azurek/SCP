@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.RoundingMode;
 import java.util.*;
 
 import static com.scp.CalculatorPlus.constants.DatabaseConstants.*;
@@ -162,7 +163,7 @@ public class RecipeService {
             }
 
             NormalizedSinkValueSelector selector = new NormalizedSinkValueSelector(this);
-            Recipe bestRecipe = selector.selectBestRecipe(recipeItem.getItem());
+            Recipe bestRecipe = selector.selectBestRecipe(recipeItem.getItem(), null);
 
             totalBaseSinkValue = totalBaseSinkValue.add(getNormalizedSinkValueOfRecipe(
                     false,
@@ -180,24 +181,12 @@ public class RecipeService {
         return totalOutputSinkValue;
     }
 
-    public double getPowerUsageOfRecipe(Recipe recipe) {
+    public double getPowerUsageOfRecipe(Recipe recipe, BigFraction quantity) {
         List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
-        int primaryItemQuantity = recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity();
-        return getPowerUsageOfRecipe(recipe, recipeItems, recipe.getCyclesPerMinute().multiply(primaryItemQuantity));
+        return getPowerUsageOfRecipe(recipe, recipeItems, quantity);
     }
 
-    public double getNormalizedPowerUsageOfRecipe(Recipe recipe) {
-        List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
-        BigFraction quantity = new BigFraction(recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity());
-        double powerUsage = getPowerUsageOfRecipe(recipe);
-        return powerUsage / (quantity.multiply(recipe.getCyclesPerMinute())).doubleValue();
-    }
-
-    public double getPowerUsageOfRecipe(
-            Recipe recipe,
-            List<RecipeItem> recipeItems,
-            BigFraction quantity) {
-
+    public double getPowerUsageOfRecipe(Recipe recipe, List<RecipeItem> recipeItems, BigFraction quantity) {
         RecipeItem primaryRecipeItem = recipeItemService.findPrimaryItem(recipe, recipeItems);
 
         BuildingAttribute powerConsumption = recipe.getBuilding().getAttribute(attributeService.findByAttributeName(POWER_CONSUMPTION));
@@ -208,19 +197,51 @@ public class RecipeService {
         double totalPowerConsumption = calculateRecipePowerConsumption(numberOfBuildings, basePowerUsage);
 
         for (RecipeItem recipeItem : recipeItems) {
-            if (!recipeItemService.isRecipeItemInput(recipeItem)) continue;
-
             if (!recipeItem.getItem().hasRecipe()) continue;
+
+            if (!recipeItemService.isRecipeItemInput(recipeItem)) continue;
 
             BigFraction itemQuantity = getItemQuantity(recipeItem, primaryRecipeItem, quantity);
 
             PowerConsumptionSelector selector = new PowerConsumptionSelector(this);
-            Recipe bestRecipe = selector.selectBestRecipe(recipeItem.getItem());
+            Recipe bestRecipe = selector.selectBestRecipe(recipeItem.getItem(), itemQuantity);
 
-            totalPowerConsumption += getPowerUsageOfRecipe(bestRecipe);
+            totalPowerConsumption += getPowerUsageOfRecipe(bestRecipe, itemQuantity);
         }
 
         return totalPowerConsumption;
+    }
+
+    public Double getNormalizedFootprintOfRecipe(Recipe recipe) {
+        List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
+        BigFraction quantity = new BigFraction(recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity());
+        double defaultFootPrintOfRecipe = getDefaultFootprintOfRecipe(recipe);
+        return defaultFootPrintOfRecipe / (quantity.multiply(recipe.getCyclesPerMinute())).doubleValue();
+    }
+
+    public Integer getDefaultFootprintOfRecipe(Recipe recipe) {
+        List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
+        BigFraction quantity = new BigFraction(recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity());
+        return getDefaultFootprintOfRecipe(recipe, recipeItems, quantity);
+    }
+
+    public Integer getDefaultFootprintOfRecipe(Recipe recipe, List<RecipeItem> recipeItems, BigFraction quantity) {
+
+        RecipeItem primaryRecipeItem = recipeItemService.findPrimaryItem(recipe, recipeItems);
+
+        int buildingFootprint = recipe.getBuilding().getFootprintArea();
+        BigFraction outputItemsPerMinute = recipe.getCyclesPerMinute().multiply(primaryRecipeItem.getQuantity());
+        BigFraction numberOfBuildings = quantity.divide(outputItemsPerMinute);
+        int totalBuildingFootprint = numberOfBuildings.bigDecimalValue(0, RoundingMode.UP.ordinal()).intValue();
+
+
+        for (RecipeItem recipeItem : recipeItems) {
+            if (!recipeItemService.isRecipeItemInput(recipeItem)) continue;
+
+            if (!recipeItem.getItem().hasRecipe()) continue;
+        }
+
+        return totalBuildingFootprint;
     }
 
     private double calculateRecipePowerConsumption(BigFraction numberOfBuildings, int basePowerUsage) {
@@ -282,7 +303,7 @@ public class RecipeService {
             BigFraction recipeItemsQuantity = new BigFraction(recipeItemService.findPrimaryItem(recipe, recipeItems).getQuantity());
             BigFraction totalRecipeItemsQuantity = quantity.divide(recipeItemsQuantity);
             BuildSteps requisiteBuildSteps = getAllBuildStepsForBestRecipe(
-                    selector.selectBestRecipe(recipeItem.getItem()),
+                    selector.selectBestRecipe(recipeItem.getItem(), totalRecipeItemsQuantity),
                     totalRecipeItemsQuantity,
                     selector
             );

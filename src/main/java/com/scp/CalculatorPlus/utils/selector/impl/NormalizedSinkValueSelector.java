@@ -2,8 +2,6 @@ package com.scp.CalculatorPlus.utils.selector.impl;
 
 import com.scp.CalculatorPlus.model.Item;
 import com.scp.CalculatorPlus.model.Recipe;
-import com.scp.CalculatorPlus.model.RecipeItem;
-import com.scp.CalculatorPlus.service.factory.RecipeItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeService;
 import com.scp.CalculatorPlus.utils.selector.RecipeSelector;
 import org.apache.commons.math3.fraction.BigFraction;
@@ -29,7 +27,7 @@ public class NormalizedSinkValueSelector implements RecipeSelector {
      * @return Optimal recipe given inputs
      */
     @Override
-    public Recipe selectBestRecipe(Item item) {
+    public Recipe selectBestRecipe(Item item, BigFraction quantity) {
         List<Recipe> recipes = recipeService.findAllRecipesForItem(item);
         BigFraction largest = BigFraction.ZERO;
         Recipe bestRecipe = null;

@@ -2,8 +2,6 @@ package com.scp.CalculatorPlus.utils.selector.impl;
 
 import com.scp.CalculatorPlus.model.Item;
 import com.scp.CalculatorPlus.model.Recipe;
-import com.scp.CalculatorPlus.model.RecipeItem;
-import com.scp.CalculatorPlus.service.factory.RecipeItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeService;
 import com.scp.CalculatorPlus.utils.selector.RecipeSelector;
 import org.apache.commons.math3.fraction.BigFraction;
@@ -32,13 +30,13 @@ public class PowerConsumptionSelector implements RecipeSelector {
      * @return Optimal recipe given inputs
      */
     @Override
-    public Recipe selectBestRecipe(Item item) {
+    public Recipe selectBestRecipe(Item item, BigFraction quantity) {
         List<Recipe> recipes = recipeService.findAllRecipesForItem(item);
         Double smallest = null;
         Recipe bestRecipe = null;
 
         for (Recipe recipe : recipes) {
-            Double normalizedPowerConsumption = recipeService.getNormalizedPowerUsageOfRecipe(recipe);
+            Double normalizedPowerConsumption = recipeService.getPowerUsageOfRecipe(recipe, quantity);
 
             if (smallest == null || normalizedPowerConsumption.compareTo(smallest) < 0) {
                 smallest = normalizedPowerConsumption;
@@ -47,9 +45,5 @@ public class PowerConsumptionSelector implements RecipeSelector {
         }
 
         return bestRecipe;
-    }
-
-    public void setRecipeService(RecipeService recipeService) {
-        this.recipeService = recipeService;
     }
 }

@@ -1,13 +1,17 @@
 package com.scp.CalculatorPlus.service;
 
+import com.scp.CalculatorPlus.model.Item;
 import com.scp.CalculatorPlus.model.Recipe;
 import com.scp.CalculatorPlus.model.buildings.BuildingAttribute;
 import com.scp.CalculatorPlus.repository.RecipeRepository;
 import com.scp.CalculatorPlus.service.factory.AttributeService;
 import com.scp.CalculatorPlus.service.factory.RecipeItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeService;
+import com.scp.CalculatorPlus.utils.selector.RecipeSelector;
+import com.scp.CalculatorPlus.utils.selector.impl.BuildingFootprintSelector;
 import com.scp.CalculatorPlus.utils.selector.impl.NormalizedSinkValueSelector;
 import com.scp.CalculatorPlus.utils.selector.impl.PowerConsumptionSelector;
+import org.apache.commons.math3.fraction.BigFraction;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 
 import static com.scp.CalculatorPlus.constants.models.ItemConstants.*;
@@ -150,11 +155,9 @@ public class RecipeServiceTests {
         mockFindPrimaryItem_Valid();
         mockIsRecipeItemInput_Valid();
 
-        NormalizedSinkValueSelector selector = new NormalizedSinkValueSelector(recipeService);
+        RecipeSelector selector = new NormalizedSinkValueSelector(recipeService);
 
-        Recipe bestRecipe = selector.selectBestRecipe(SCREW);
-
-        assertEquals(SCREW_RECIPE, bestRecipe);
+        assertBestRecipe(selector, SCREW, SCREW_RECIPE, null);
     }
 
     @Test
@@ -165,10 +168,39 @@ public class RecipeServiceTests {
         mockIsRecipeItemInput_Valid();
         mockFindAttributeByName();
 
-        PowerConsumptionSelector selector = new PowerConsumptionSelector(recipeService);
+        RecipeSelector selector = new PowerConsumptionSelector(recipeService);
 
-        Recipe bestRecipe = selector.selectBestRecipe(SCREW);
+        assertBestRecipe(selector, SCREW, STEEL_SCREW_RECIPE, new BigFraction(260));
+    }
 
-        assertEquals(STEEL_SCREW_RECIPE, bestRecipe);
+    @Test
+    void findBestRecipeForItemByPowerUsage_ShouldBe() {
+        mockFindAllByPrimaryOutput_Valid();
+        mockGetRecipeItems_Valid();
+        mockFindPrimaryItem_Valid();
+        mockIsRecipeItemInput_Valid();
+        mockFindAttributeByName();
+
+        double powerUsage = recipeService.getPowerUsageOfRecipe(STEEL_SCREW_RECIPE, new BigFraction(260));
+
+        assertEquals(10.05, powerUsage);
+    }
+
+    @Test
+    void findBestRecipeForItemByFootprint_ShouldBe() {
+        mockFindAllByPrimaryOutput_Valid();
+        mockGetRecipeItems_Valid();
+        mockFindPrimaryItem_Valid();
+        mockIsRecipeItemInput_Valid();
+        mockFindAttributeByName();
+
+        RecipeSelector selector = new BuildingFootprintSelector(recipeService);
+
+        assertBestRecipe(selector, SCREW, STEEL_SCREW_RECIPE, null);
+    }
+
+    private void assertBestRecipe(RecipeSelector selector, Item item, Recipe recipe, BigFraction quantity) {
+        Recipe bestRecipe = selector.selectBestRecipe(item, quantity);
+        assertEquals(recipe, bestRecipe);
     }
 }

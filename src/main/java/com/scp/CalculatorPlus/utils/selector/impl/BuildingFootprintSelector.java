@@ -2,9 +2,11 @@ package com.scp.CalculatorPlus.utils.selector.impl;
 
 import com.scp.CalculatorPlus.model.Item;
 import com.scp.CalculatorPlus.model.Recipe;
-import com.scp.CalculatorPlus.service.factory.RecipeItemService;
 import com.scp.CalculatorPlus.service.factory.RecipeService;
 import com.scp.CalculatorPlus.utils.selector.RecipeSelector;
+import org.apache.commons.math3.fraction.BigFraction;
+
+import java.util.List;
 
 public class BuildingFootprintSelector implements RecipeSelector {
 
@@ -12,22 +14,24 @@ public class BuildingFootprintSelector implements RecipeSelector {
 
     private RecipeService recipeService;
 
-    private RecipeItemService recipeItemService;
-
-    public BuildingFootprintSelector(RecipeService recipeService, RecipeItemService recipeItemService) {
+    public BuildingFootprintSelector(RecipeService recipeService) {
         this.recipeService = recipeService;
-        this.recipeItemService = recipeItemService;
     }
     @Override
-    public Recipe selectBestRecipe(Item item) {
-        return null;
-    }
+    public Recipe selectBestRecipe(Item item, BigFraction quantity) {
+        List<Recipe> recipes = recipeService.findAllRecipesForItem(item);
+        Double smallest = null;
+        Recipe bestRecipe = null;
 
-    public void setRecipeService(RecipeService recipeService) {
-        this.recipeService = recipeService;
-    }
+        for (Recipe recipe : recipes) {
+            Double defaultFootprint = recipeService.getNormalizedFootprintOfRecipe(recipe);
 
-    public void setRecipeItemService(RecipeItemService recipeItemService) {
-        this.recipeItemService = recipeItemService;
+            if (smallest == null || defaultFootprint.compareTo(smallest) < 0) {
+                smallest = defaultFootprint;
+                bestRecipe = recipe;
+            }
+        }
+
+        return bestRecipe;
     }
 }
