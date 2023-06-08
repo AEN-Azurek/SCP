@@ -24,19 +24,19 @@ public class PowerCalculations {
      * @param clockSpeed - Adjusted clock speed
      * @return The total power consumption after under/overclock
      */
-    public static double calculateAdjustedPowerConsumption(int defaultPowerUsage, BigFraction clockSpeed) {
+    public static BigDecimal calculateAdjustedPowerConsumption(int defaultPowerUsage, BigFraction clockSpeed) {
         if (clockSpeed.compareTo(MIN_CLOCK_SPEED) < 0 || clockSpeed.compareTo(MAX_CLOCK_SPEED) > 0) {
             logger.info("Clock speed must be between 0.01 and 2.50");
-            return -1;
+            return new BigDecimal(-1);
         }
 
         if (defaultPowerUsage < 0) {
             logger.info("Invalid power usage");
-            return -1;
+            return new BigDecimal(-1);
         }
 
         BigDecimal value = new BigDecimal(defaultPowerUsage * clockSpeed.pow(POWER_EXP));
 
-        return value.setScale(2, RoundingMode.HALF_UP).doubleValue();
+        return value.setScale(2, RoundingMode.HALF_UP);
     }
 }

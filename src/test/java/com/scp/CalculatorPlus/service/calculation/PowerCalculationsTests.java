@@ -3,6 +3,9 @@ package com.scp.CalculatorPlus.service.calculation;
 import org.apache.commons.math3.fraction.BigFraction;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import static com.scp.CalculatorPlus.service.calculation.PowerCalculations.calculateAdjustedPowerConsumption;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -13,9 +16,9 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = 50;
         BigFraction clockSpeed = new BigFraction(0);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(-1, powerUsage);
+        assertEquals(new BigDecimal("-1"), powerUsage);
     }
 
     @Test
@@ -23,9 +26,9 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = 50;
         BigFraction clockSpeed = new BigFraction(3);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(-1, powerUsage);
+        assertEquals(new BigDecimal("-1"), powerUsage);
     }
 
     @Test
@@ -33,9 +36,9 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = -1;
         BigFraction clockSpeed = new BigFraction(1);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(-1, powerUsage);
+        assertEquals(new BigDecimal("-1"), powerUsage);
     }
 
     @Test
@@ -43,9 +46,9 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = 4;
         BigFraction clockSpeed = new BigFraction(1);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(4, powerUsage);
+        assertEquals(new BigDecimal("4").setScale(2, RoundingMode.HALF_UP), powerUsage);
     }
 
     @Test
@@ -53,9 +56,9 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = 4;
         BigFraction clockSpeed = new BigFraction(0.1);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(0.19, powerUsage);
+        assertEquals(new BigDecimal("0.19").setScale(2, RoundingMode.HALF_UP), powerUsage);
     }
 
     @Test
@@ -63,9 +66,9 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = 4;
         BigFraction clockSpeed = new BigFraction(0.5);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(1.6, powerUsage);
+        assertEquals(new BigDecimal("1.6").setScale(2, RoundingMode.HALF_UP), powerUsage);
     }
 
     @Test
@@ -73,9 +76,9 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = 4;
         BigFraction clockSpeed = new BigFraction(1.5);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(6.84, powerUsage);
+        assertEquals(new BigDecimal("6.84").setScale(2, RoundingMode.HALF_UP), powerUsage);
     }
 
     @Test
@@ -83,9 +86,9 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = 4;
         BigFraction clockSpeed = new BigFraction(2.0);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(10, powerUsage);
+        assertEquals(new BigDecimal("10").setScale(2, RoundingMode.HALF_UP), powerUsage);
     }
 
     @Test
@@ -93,8 +96,8 @@ public class PowerCalculationsTests {
         int defaultPowerUsage = 4;
         BigFraction clockSpeed = new BigFraction(2.5);
 
-        double powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
+        BigDecimal powerUsage = calculateAdjustedPowerConsumption(defaultPowerUsage, clockSpeed);
 
-        assertEquals(13.43, powerUsage);
+        assertEquals(new BigDecimal("13.43").setScale(2, RoundingMode.HALF_UP), powerUsage);
     }
 }

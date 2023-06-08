@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 
 import static com.scp.CalculatorPlus.constants.models.ItemConstants.*;
@@ -174,16 +175,29 @@ public class RecipeServiceTests {
     }
 
     @Test
-    void findBestRecipeForItemByPowerUsage_ShouldBe() {
+    void findBestRecipeForItemByPowerUsage_ShouldBe6_05() {
         mockFindAllByPrimaryOutput_Valid();
         mockGetRecipeItems_Valid();
         mockFindPrimaryItem_Valid();
         mockIsRecipeItemInput_Valid();
         mockFindAttributeByName();
 
-        double powerUsage = recipeService.getPowerUsageOfRecipe(STEEL_SCREW_RECIPE, new BigFraction(260));
+        BigDecimal powerUsage = recipeService.getPowerUsageOfRecipe(STEEL_BEAM_RECIPE, new BigFraction(5));
 
-        assertEquals(10.05, powerUsage);
+        assertEquals(new BigDecimal("6.05").setScale(2, RoundingMode.HALF_UP), powerUsage);
+    }
+
+    @Test
+    void findBestRecipeForItemByPowerUsage_ShouldBe10_05() {
+        mockFindAllByPrimaryOutput_Valid();
+        mockGetRecipeItems_Valid();
+        mockFindPrimaryItem_Valid();
+        mockIsRecipeItemInput_Valid();
+        mockFindAttributeByName();
+
+        BigDecimal powerUsage = recipeService.getPowerUsageOfRecipe(STEEL_SCREW_RECIPE, new BigFraction(260));
+
+        assertEquals(new BigDecimal("10.05").setScale(2, RoundingMode.HALF_UP), powerUsage);
     }
 
     @Test

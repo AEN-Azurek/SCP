@@ -6,6 +6,7 @@ import com.scp.CalculatorPlus.service.factory.RecipeService;
 import com.scp.CalculatorPlus.utils.selector.RecipeSelector;
 import org.apache.commons.math3.fraction.BigFraction;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class PowerConsumptionSelector implements RecipeSelector {
@@ -32,11 +33,11 @@ public class PowerConsumptionSelector implements RecipeSelector {
     @Override
     public Recipe selectBestRecipe(Item item, BigFraction quantity) {
         List<Recipe> recipes = recipeService.findAllRecipesForItem(item);
-        Double smallest = null;
+        BigDecimal smallest = null;
         Recipe bestRecipe = null;
 
         for (Recipe recipe : recipes) {
-            Double normalizedPowerConsumption = recipeService.getPowerUsageOfRecipe(recipe, quantity);
+            BigDecimal normalizedPowerConsumption = recipeService.getPowerUsageOfRecipe(recipe, quantity);
 
             if (smallest == null || normalizedPowerConsumption.compareTo(smallest) < 0) {
                 smallest = normalizedPowerConsumption;

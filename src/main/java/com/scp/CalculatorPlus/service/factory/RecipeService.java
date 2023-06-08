@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
@@ -181,12 +182,12 @@ public class RecipeService {
         return totalOutputSinkValue;
     }
 
-    public double getPowerUsageOfRecipe(Recipe recipe, BigFraction quantity) {
+    public BigDecimal getPowerUsageOfRecipe(Recipe recipe, BigFraction quantity) {
         List<RecipeItem> recipeItems = recipeItemService.getRecipeItems(recipe);
         return getPowerUsageOfRecipe(recipe, recipeItems, quantity);
     }
 
-    public double getPowerUsageOfRecipe(Recipe recipe, List<RecipeItem> recipeItems, BigFraction quantity) {
+    public BigDecimal getPowerUsageOfRecipe(Recipe recipe, List<RecipeItem> recipeItems, BigFraction quantity) {
         RecipeItem primaryRecipeItem = recipeItemService.findPrimaryItem(recipe, recipeItems);
 
         BuildingAttribute powerConsumption = recipe.getBuilding().getAttribute(attributeService.findByAttributeName(POWER_CONSUMPTION));
@@ -194,7 +195,7 @@ public class RecipeService {
         BigFraction numberOfBuildings = quantity.divide(outputItemsPerMinute);
         int basePowerUsage = Integer.parseInt(powerConsumption.getAttributeValue());
 
-        double totalPowerConsumption = calculateRecipePowerConsumption(numberOfBuildings, basePowerUsage);
+        BigDecimal totalPowerConsumption = calculateRecipePowerConsumption(numberOfBuildings, basePowerUsage);
 
         for (RecipeItem recipeItem : recipeItems) {
             if (!recipeItem.getItem().hasRecipe()) continue;
@@ -206,7 +207,7 @@ public class RecipeService {
             PowerConsumptionSelector selector = new PowerConsumptionSelector(this);
             Recipe bestRecipe = selector.selectBestRecipe(recipeItem.getItem(), itemQuantity);
 
-            totalPowerConsumption += getPowerUsageOfRecipe(bestRecipe, itemQuantity);
+            totalPowerConsumption = getPowerUsageOfRecipe(bestRecipe, itemQuantity).add(totalPowerConsumption);
         }
 
         return totalPowerConsumption;
@@ -244,13 +245,13 @@ public class RecipeService {
         return totalBuildingFootprint;
     }
 
-    private double calculateRecipePowerConsumption(BigFraction numberOfBuildings, int basePowerUsage) {
+    private BigDecimal calculateRecipePowerConsumption(BigFraction numberOfBuildings, int basePowerUsage) {
         int wholeNumber = numberOfBuildings.intValue();
         BigFraction fractionalPart = numberOfBuildings.subtract(wholeNumber);
 
-        double totalPowerConsumption = wholeNumber * basePowerUsage;
+        BigDecimal totalPowerConsumption = new BigDecimal(wholeNumber * basePowerUsage);
         if (fractionalPart.compareTo(BigFraction.ZERO) > 0) {
-            totalPowerConsumption += calculateAdjustedPowerConsumption(basePowerUsage, fractionalPart);
+            totalPowerConsumption = calculateAdjustedPowerConsumption(basePowerUsage, fractionalPart).add(totalPowerConsumption);
         }
 
         return totalPowerConsumption;
